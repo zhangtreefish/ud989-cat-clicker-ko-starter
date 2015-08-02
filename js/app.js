@@ -1,13 +1,46 @@
-var Cat = function() {
-	this.clickCount = ko.observable(0);
-	this.name = ko.observable('cat1');
-	this.imgSrc = ko.observable('http://placekitten.com/g/200/300');
-	this.nickNames = ko.observableArray([{nickname:"maomao"},{nickname:"snow-shoes"}]);
+var initialCats = [{
+	clickCount:0,
+	name:'cat1',
+	imgSrc:'http://placekitten.com/g/200/300',
+	nickNames:[{nickname:'maomao'},{nickname:'snow-shoes'}]
+},{}];
+
+var Cat = function(data) {
+	this.clickCount = ko.observable(data.clickCount);
+	this.name = ko.observable(data.name);
+	this.imgSrc = ko.observable(data.imgSrc);
+	this.nickNames = ko.observableArray(data.nickNames);
+
+	this.title = ko.computed(function() {
+		var title;
+		var clicks = this.clickCount();
+		switch(true) {
+		case(clicks>12):
+			title='teenager';
+			break;
+		case(clicks>9):
+			title='tween';
+			break;
+			case(clicks>2):
+			title='munchkin';
+			break;
+		default:
+			title='baby';
+		}
+		return title;
+	},this); //need to pass 'this' in to evaluate this.clickCount()
 };
 var ViewModel = function() {
-	this.currentCat = ko.observable(new Cat());
+	var self = this;
+
+	this.catList = ko.observableArray([]);
+	initialCats.forEach(function(catEl) {
+		self.catList.push(new Cat(catEl));
+	});
+
+	this.currentCat = ko.observable(this.catList()[0]);//need()
 	this.incrementCounter = function() {
-		this.currentCat().clickCount(this.currentCat().clickCount()+1);
+		self.currentCat().clickCount(self.currentCat().clickCount()+1);
 	};
 };
 
