@@ -2,11 +2,9 @@
 <html>
   <head>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
-
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-
-    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
-    <script src="js/lib/knockout-3.2.0.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/lib/knockout-3.2.0.js"></script>
   </head>
 
   <body>
@@ -18,18 +16,56 @@
         <tbody data-bind="foreach: answers">
             <tr>
                 <td data-bind="text: answerText"></td>
-                <td><select data-bind="options: [1,2,3,4,5], value: points"></select></td>
+                <td data-bind="starRating: points"></td>//TODO: the star rating and the jqButton do not work?
             </tr>
         </tbody>
     </table>
 
     <h3 data-bind="fadeVisible: pointsUsed() > pointsBudget">You've used too many points! Please remove some.</h3>
     <p>You've got <b data-bind="text: pointsBudget - pointsUsed()"></b> points left to use.</p>
-    <button data-bind="enable: pointsUsed() <= pointsBudget, click: save">Finished</button>
+    <button data-bind="jqButton:{enable: pointsUsed() <= pointsBudget}, click: save">Finished</button>
 
   </body>
   <script>
-    // Reusable bindings - ideally kept in a separate file
+ //custom-mde widget!
+ko.bindingHandlers.starRating = {
+    init: function(element, valueAccessor) {
+        $(element).addClass("starRating");
+        for (var i = 0; i < 5; i++)
+            $("<span>").appendTo(element);
+
+        $("span", element).each(function(index) {
+            $(this).hover(
+                function() { $(this).prevAll().add(this).addClass("hoverChosen") },
+                function() { $(this).prevAll().add(this).removeClass("hoverChosen") }
+             )
+             .click(function(){
+                var observable = valueAccessor();  // Get the associated observable
+                   observable(index+1);               // Write the new rating to it;
+             });
+        });
+    },
+    update: function(element, valueAccessor) {
+        // Give the first x stars the "chosen" class, where x <= rating
+        var observable = valueAccessor();
+        $("span", element).each(function(index) {
+            $(this).toggleClass("chosen", index < observable());
+        });
+    }
+};
+
+ //jQuery button
+    ko.bindingHandlers.jqButton = {
+        init: function(element) {
+            $(element).button();//Turns the element into a jQuery UI button
+        },
+        update: function(element,valueAccessor) {
+            var currentVal = valueAccessor();
+            //update the "disabled" state
+            $(element).button("option","disabled", currentVal.enable === false);//setter
+        }
+    };
+// Reusable bindings - ideally kept in a separate file
     ko.bindingHandlers.fadeVisible = {
         init: function(element, valueAccessor) {
             // Start visible/invisible according to initial value
